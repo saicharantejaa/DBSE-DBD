@@ -1,0 +1,472 @@
+-- ============================================================
+-- Learning Platform — Real Courses Upsert Script
+-- Auto-generated from courses_seed_data.json
+-- Safe to re-run multiple times (idempotent ON CONFLICT updates)
+-- ============================================================
+
+-- 1. Schema update (ensure columns and unique indexes exist)
+ALTER TABLE courses ADD COLUMN IF NOT EXISTS course_code VARCHAR(20) UNIQUE;
+ALTER TABLE courses ADD COLUMN IF NOT EXISTS credits INTEGER;
+ALTER TABLE courses ADD COLUMN IF NOT EXISTS coordinator VARCHAR(150);
+ALTER TABLE courses ADD COLUMN IF NOT EXISTS prerequisite VARCHAR(255);
+
+CREATE UNIQUE INDEX IF NOT EXISTS uq_modules_course_title ON modules(course_id, title);
+CREATE UNIQUE INDEX IF NOT EXISTS uq_course_content_module_title ON course_content(module_id, title);
+
+-- 2. Upsert courses, modules, and content
+DO $$
+DECLARE
+    v_course_id INTEGER;
+    v_module_id INTEGER;
+BEGIN
+
+    -- Course: 25SC2107E - Machine Learning
+    INSERT INTO courses (course_code, title, description, credits, coordinator, prerequisite, instructor_id)
+    VALUES ('25SC2107E', 'Machine Learning', 'Machine Learning covers statistical and algorithmic learning systems, model evaluation, and deployment engineering anchored to live prediction services. Covers the classical machine learning canon including regularised linear models, decision trees, ensemble learning, clustering, dimensionality reduction, calibration, feature engineering, and production MLOps.', 4, 'LakshmiPrasanna Yeluri', '25SC1306E - Computational Foundations for Artificial Intelligence', 1)
+    ON CONFLICT (course_code) DO UPDATE SET
+        title = EXCLUDED.title,
+        description = EXCLUDED.description,
+        credits = EXCLUDED.credits,
+        coordinator = EXCLUDED.coordinator,
+        prerequisite = EXCLUDED.prerequisite
+    RETURNING id INTO v_course_id;
+    IF v_course_id IS NULL THEN
+        SELECT id INTO v_course_id FROM courses WHERE course_code = '25SC2107E';
+    END IF;
+
+    -- Module 1: M1. PlacementPredict as a System — The M...
+    INSERT INTO modules (course_id, title, order_index)
+    VALUES (v_course_id, 'M1. PlacementPredict as a System — The ML Lifecycle', 0)
+    ON CONFLICT (course_id, title) DO UPDATE SET
+        order_index = EXCLUDED.order_index
+    RETURNING id INTO v_module_id;
+    IF v_module_id IS NULL THEN
+        SELECT id INTO v_module_id FROM modules WHERE course_id = v_course_id AND title = 'M1. PlacementPredict as a System — The ML Lifecycle';
+    END IF;
+
+    INSERT INTO course_content (module_id, title, content_type, content_text)
+    VALUES (v_module_id, 'M1. PlacementPredict as a System — The ML Lifecycle', 'text', 'The Machine Learning lifecycle spans data ingestion, automated validation, exploratory analysis, feature engineering, training, offline evaluation, model packaging, serving, and continuous production monitoring. In supervised classification, input features are mapped to discrete categorical labels via a parameterized hypothesis function. Tracing a live prediction request involves HTTP payload ingestion, schema validation via Pydantic or protobuf, online feature retrieval from low-latency stores, model inference execution, and probability post-processing. Training-serving skew occurs when feature definitions differ between offline training pipelines and online serving systems. Feature stores like Feast decouple feature calculation from model consumption, providing point-in-time correctness to prevent data leakage. Production MLOps pipelines utilize tools such as MLflow for experiment tracking and DVC for dataset versioning. Monitoring services track data drift using statistical distance metrics such as the Kolmogorov-Smirnov test and Population Stability Index (PSI).')
+    ON CONFLICT (module_id, title) DO UPDATE SET
+        content_type = EXCLUDED.content_type,
+        content_text = EXCLUDED.content_text;
+
+    -- Module 2: M2. Supervised Learning — Linear Models ...
+    INSERT INTO modules (course_id, title, order_index)
+    VALUES (v_course_id, 'M2. Supervised Learning — Linear Models at Depth', 1)
+    ON CONFLICT (course_id, title) DO UPDATE SET
+        order_index = EXCLUDED.order_index
+    RETURNING id INTO v_module_id;
+    IF v_module_id IS NULL THEN
+        SELECT id INTO v_module_id FROM modules WHERE course_id = v_course_id AND title = 'M2. Supervised Learning — Linear Models at Depth';
+    END IF;
+
+    INSERT INTO course_content (module_id, title, content_type, content_text)
+    VALUES (v_module_id, 'M2. Supervised Learning — Linear Models at Depth', 'text', 'Linear regression models the relationship between dependent and independent variables via linear combination: y = X * theta + epsilon. The closed-form Ordinary Least Squares (OLS) normal equation theta = (X^T * X)^(-1) * X^T * y computes optimal weights directly when X^T * X is invertible. Gradient descent optimizes loss iteratively using learning rates, batching strategies, and momentum to navigate convex loss surfaces. Ridge regression applies an L2 regularization penalty lambda * ||theta||_2^2, shrinking regression coefficients smoothly to reduce multicollinearity and variance. Lasso regression applies an L1 regularization penalty lambda * ||theta||_1, whose diamond-shaped constraint geometry produces exact zero coefficients for automatic feature selection. Logistic regression models binary probabilities through the sigmoid activation function sigma(z) = 1 / (1 + exp(-z)), optimizing log-loss or binary cross-entropy. Multinomial logistic regression uses the softmax function to normalize logit vectors into valid multi-class probability distributions. Feature preprocessing techniques include Z-score standardization (zero mean, unit variance), MinMax scaling, and categorical encoding methods like one-hot, target, and ordinal encoding.')
+    ON CONFLICT (module_id, title) DO UPDATE SET
+        content_type = EXCLUDED.content_type,
+        content_text = EXCLUDED.content_text;
+
+    -- Module 3: M3. Supervised Learning — Tree-Based Mod...
+    INSERT INTO modules (course_id, title, order_index)
+    VALUES (v_course_id, 'M3. Supervised Learning — Tree-Based Models', 2)
+    ON CONFLICT (course_id, title) DO UPDATE SET
+        order_index = EXCLUDED.order_index
+    RETURNING id INTO v_module_id;
+    IF v_module_id IS NULL THEN
+        SELECT id INTO v_module_id FROM modules WHERE course_id = v_course_id AND title = 'M3. Supervised Learning — Tree-Based Models';
+    END IF;
+
+    INSERT INTO course_content (module_id, title, content_type, content_text)
+    VALUES (v_module_id, 'M3. Supervised Learning — Tree-Based Models', 'text', 'Decision trees perform recursive binary partitioning of feature space using greedy top-down splitting algorithms such as CART and ID3. Splitting criteria evaluate purity gains: Gini impurity measures misclassification probability as 1 - sum(p_i^2), while Entropy measures information content as -sum(p_i * log2(p_i)). Regression trees split by minimizing variance or Mean Squared Error (MSE) within resulting child leaf partitions. Tree regularization and pruning counteract overfitting through maximum depth limits, minimum samples per split, and cost-complexity pruning. Bagging (Bootstrap Aggregating) trains independent models on bootstrap samples with replacement, evaluating generalization through Out-Of-Bag (OOB) error. Random forests combine bagging with random feature subspace sampling (typically sqrt(p) candidate features per split) to decorrelate individual trees and reduce overall ensemble variance. Boosting trains sequential weak learners where each subsequent estimator fits the negative gradient or residual errors of the preceding ensemble. Gradient boosting implementations such as XGBoost and LightGBM leverage second-order Taylor expansions, histogram-based split finding, and leaf-wise tree growth. Model interpretability in tree ensembles relies on Gini feature importance, permutation importance, and game-theoretic SHAP (Shapley Additive exPlanations) values.')
+    ON CONFLICT (module_id, title) DO UPDATE SET
+        content_type = EXCLUDED.content_type,
+        content_text = EXCLUDED.content_text;
+
+    -- Module 4: M4. Unsupervised Learning...
+    INSERT INTO modules (course_id, title, order_index)
+    VALUES (v_course_id, 'M4. Unsupervised Learning', 3)
+    ON CONFLICT (course_id, title) DO UPDATE SET
+        order_index = EXCLUDED.order_index
+    RETURNING id INTO v_module_id;
+    IF v_module_id IS NULL THEN
+        SELECT id INTO v_module_id FROM modules WHERE course_id = v_course_id AND title = 'M4. Unsupervised Learning';
+    END IF;
+
+    INSERT INTO course_content (module_id, title, content_type, content_text)
+    VALUES (v_module_id, 'M4. Unsupervised Learning', 'text', 'K-Means clustering partitions n observations into K clusters by alternating between assigning points to the nearest centroid and recalculating centroid coordinates. K-Means++ initialization mitigates local minima by selecting initial cluster centroids probabilistically proportional to squared distances from existing centers. Optimal cluster counts are evaluated using the Elbow method on Within-Cluster Sum of Squares (WCSS) and Silhouette analysis measuring separation and cohesion. Hierarchical agglomerative clustering builds dendrogram trees bottom-up using linkage criteria such as single, complete, average, or Ward''s minimum variance. DBSCAN (Density-Based Spatial Clustering of Applications with Noise) identifies dense regions using epsilon-neighborhoods and MinPts thresholds, discovering arbitrary non-convex cluster shapes while isolating noise. Principal Component Analysis (PCA) performs orthogonal linear transformation via covariance matrix eigendecomposition or Singular Value Decomposition (SVD), projecting data onto directions of maximal variance. Nonlinear dimensionality reduction algorithms like t-SNE and UMAP preserve local neighborhood manifold topology for high-dimensional data visualization. Anomaly detection techniques include Isolation Forests that isolate outliers via random splitting depths, and One-Class Support Vector Machines.')
+    ON CONFLICT (module_id, title) DO UPDATE SET
+        content_type = EXCLUDED.content_type,
+        content_text = EXCLUDED.content_text;
+
+    -- Module 5: M5. Model Evaluation, Selection, and Cal...
+    INSERT INTO modules (course_id, title, order_index)
+    VALUES (v_course_id, 'M5. Model Evaluation, Selection, and Calibration', 4)
+    ON CONFLICT (course_id, title) DO UPDATE SET
+        order_index = EXCLUDED.order_index
+    RETURNING id INTO v_module_id;
+    IF v_module_id IS NULL THEN
+        SELECT id INTO v_module_id FROM modules WHERE course_id = v_course_id AND title = 'M5. Model Evaluation, Selection, and Calibration';
+    END IF;
+
+    INSERT INTO course_content (module_id, title, content_type, content_text)
+    VALUES (v_module_id, 'M5. Model Evaluation, Selection, and Calibration', 'text', 'Rigorous evaluation prevents data leakage by maintaining strict separation between training, validation, and untouched hold-out test sets. K-fold cross-validation and stratified K-fold partitions balance class distributions to provide unbiased performance estimates across folds. Classification performance on imbalanced data is measured using Precision (true positives over predicted positives), Recall (sensitivity), F1-score, and the Area Under the Precision-Recall Curve (PR-AUC). Receiver Operating Characteristic (ROC) curves plot True Positive Rate against False Positive Rate across all thresholds, summarized by the ROC-AUC score. Regression models are evaluated via Mean Absolute Error (MAE), Root Mean Squared Error (RMSE), and the coefficient of determination R-squared. Probability calibration aligns predicted model confidences with true empirical event frequencies using reliability diagrams, Brier score, Platt scaling (logistic transformation), and isotonic regression. Hyperparameter optimization explores candidate parameter spaces using grid search, randomized search, and Bayesian optimization with Gaussian process surrogate models. Model comparison utilizes statistical hypothesis tests such as McNemar''s test and paired bootstrap sampling to verify statistically significant improvements.')
+    ON CONFLICT (module_id, title) DO UPDATE SET
+        content_type = EXCLUDED.content_type,
+        content_text = EXCLUDED.content_text;
+
+    -- Module 6: M6. ML Engineering — From Notebook to Pr...
+    INSERT INTO modules (course_id, title, order_index)
+    VALUES (v_course_id, 'M6. ML Engineering — From Notebook to Production', 5)
+    ON CONFLICT (course_id, title) DO UPDATE SET
+        order_index = EXCLUDED.order_index
+    RETURNING id INTO v_module_id;
+    IF v_module_id IS NULL THEN
+        SELECT id INTO v_module_id FROM modules WHERE course_id = v_course_id AND title = 'M6. ML Engineering — From Notebook to Production';
+    END IF;
+
+    INSERT INTO course_content (module_id, title, content_type, content_text)
+    VALUES (v_module_id, 'M6. ML Engineering — From Notebook to Production', 'text', 'Closing the gap between experimental notebooks and production requires robust software engineering practices, type-checked modular code, and automated testing. Feature stores provide unified feature schemas, enabling consistent transformations across batch offline training and real-time online inference. Model artifacts are packaged and serialized into open standard formats such as ONNX, TorchScript, and containerized Docker environments for reproducible serving. Serving infrastructure supports high-performance low-latency inference via asynchronous REST frameworks like FastAPI and binary RPC protocols like gRPC. Production monitoring pipelines detect data drift, concept drift, and performance degradation using telemetry exporters and Prometheus metrics. Automated retraining workflows trigger continuous model updates when performance thresholds drop below accepted service level objectives (SLOs). Distributed model serving handles varying request loads through dynamic autoscaling, worker pools, batching queues, and GPU hardware acceleration.')
+    ON CONFLICT (module_id, title) DO UPDATE SET
+        content_type = EXCLUDED.content_type,
+        content_text = EXCLUDED.content_text;
+
+
+    -- Course: 25CS2103E - Data Structures and Algorithms - 3
+    INSERT INTO courses (course_code, title, description, credits, coordinator, prerequisite, instructor_id)
+    VALUES ('25CS2103E', 'Data Structures and Algorithms - 3', 'Advanced algorithmic design and analysis covering advanced string algorithms, multi-dimensional dynamic programming, network flow, NP-completeness reductions, approximation algorithms, and randomised data structures.', 4, 'Dr. B. Tirumala Rao', '25CS1301E - Data Structures and Algorithms - 2', 1)
+    ON CONFLICT (course_code) DO UPDATE SET
+        title = EXCLUDED.title,
+        description = EXCLUDED.description,
+        credits = EXCLUDED.credits,
+        coordinator = EXCLUDED.coordinator,
+        prerequisite = EXCLUDED.prerequisite
+    RETURNING id INTO v_course_id;
+    IF v_course_id IS NULL THEN
+        SELECT id INTO v_course_id FROM courses WHERE course_code = '25CS2103E';
+    END IF;
+
+    -- Module 1: Module 1. TextHack as a System — The Adv...
+    INSERT INTO modules (course_id, title, order_index)
+    VALUES (v_course_id, 'Module 1. TextHack as a System — The Advanced-Algorithm Question Bank', 0)
+    ON CONFLICT (course_id, title) DO UPDATE SET
+        order_index = EXCLUDED.order_index
+    RETURNING id INTO v_module_id;
+    IF v_module_id IS NULL THEN
+        SELECT id INTO v_module_id FROM modules WHERE course_id = v_course_id AND title = 'Module 1. TextHack as a System — The Advanced-Algorithm Question Bank';
+    END IF;
+
+    INSERT INTO course_content (module_id, title, content_type, content_text)
+    VALUES (v_module_id, 'Module 1. TextHack as a System — The Advanced-Algorithm Question Bank', 'text', 'Advanced algorithmic engineering involves mapping complex computational problems into standard formal algorithmic primitives. Exact substring queries map to linear string-matching algorithms, while fuzzy search with edit operations maps to dynamic programming. Document similarity search maps to suffix structures and MinHash sketches; network scheduling and assignment problems map to maximum flow. Resource allocation under constraints requires understanding NP-completeness and approximation heuristics. Primality testing and cryptographic hashing leverage randomized and probabilistic algorithmic foundations. Asymptotic complexity analysis evaluates worst-case, average-case, and amortized time bounds across diverse computational models.')
+    ON CONFLICT (module_id, title) DO UPDATE SET
+        content_type = EXCLUDED.content_type,
+        content_text = EXCLUDED.content_text;
+
+    -- Module 2: Module 2. String Algorithms...
+    INSERT INTO modules (course_id, title, order_index)
+    VALUES (v_course_id, 'Module 2. String Algorithms', 1)
+    ON CONFLICT (course_id, title) DO UPDATE SET
+        order_index = EXCLUDED.order_index
+    RETURNING id INTO v_module_id;
+    IF v_module_id IS NULL THEN
+        SELECT id INTO v_module_id FROM modules WHERE course_id = v_course_id AND title = 'Module 2. String Algorithms';
+    END IF;
+
+    INSERT INTO course_content (module_id, title, content_type, content_text)
+    VALUES (v_module_id, 'Module 2. String Algorithms', 'text', 'The string-matching problem searches for pattern occurrences of length m within a text of length n. The naive algorithm incurs O((n - m + 1) * m) worst-case time due to repetitive character backtracking. The Knuth-Morris-Pratt (KMP) algorithm achieves linear O(n + m) time using a precomputed prefix failure function pi[i]. The prefix function pi[i] represents the length of the longest proper prefix of P[0..i] that is also a suffix of P[0..i], skipping redundant comparisons without rewinding text pointers. The Z-algorithm computes an array where Z[i] is the length of the longest substring starting at index i matching a prefix of string S in linear O(n) time using sliding match boxes [L, R]. The Rabin-Karp algorithm uses rolling polynomial hashing H(s) = sum(s[i] * p^i) mod M to compute fingerprint comparisons in O(1) time per window, using double-hashing to eliminate hash collisions. The Aho-Corasick automaton generalizes multi-pattern string matching in O(n + m + z) time by constructing a trie equipped with failure links and dictionary output links. Suffix Arrays represent lexicographically sorted suffixes as integer start indices, constructible in O(n log n) or linear O(n) using SA-IS. Kasai''s algorithm computes the Longest Common Prefix (LCP) array from the Suffix Array in linear O(n) time, enabling efficient substring search and repeat detection.')
+    ON CONFLICT (module_id, title) DO UPDATE SET
+        content_type = EXCLUDED.content_type,
+        content_text = EXCLUDED.content_text;
+
+    -- Module 3: Module 3. Advanced Dynamic Programming...
+    INSERT INTO modules (course_id, title, order_index)
+    VALUES (v_course_id, 'Module 3. Advanced Dynamic Programming', 2)
+    ON CONFLICT (course_id, title) DO UPDATE SET
+        order_index = EXCLUDED.order_index
+    RETURNING id INTO v_module_id;
+    IF v_module_id IS NULL THEN
+        SELECT id INTO v_module_id FROM modules WHERE course_id = v_course_id AND title = 'Module 3. Advanced Dynamic Programming';
+    END IF;
+
+    INSERT INTO course_content (module_id, title, content_type, content_text)
+    VALUES (v_module_id, 'Module 3. Advanced Dynamic Programming', 'text', 'Dynamic Programming solves optimization problems exhibiting overlapping subproblems and optimal substructure by caching subproblem solutions. Edit Distance (Levenshtein distance) calculates minimum insertions, deletions, and substitutions required to transform string A into string B via O(n * m) DP tables. Sequence alignment algorithms extend edit distance: Needleman-Wunsch performs global alignment, while Smith-Waterman performs local alignment using affine gap penalties. Interval DP optimizes operations over contiguous subarrays: Matrix Chain Multiplication determines optimal parenthesization order in O(n^3) time, optimizable to O(n^2) via Knuth''s optimization. Bitmask DP represents subset states using binary integer masks; the Travelling Salesperson Problem (TSP) is solved in O(n^2 * 2^n) time using state dp(mask, u). Tree DP computes optimal substructure over trees via post-order traversals (tree diameter, independent sets) and the Rerooting technique for all-roots answers in O(n). Sum Over Subsets (SOS) DP computes cumulative submask sums for all 2^n bitmasks in O(n * 2^n) time through multidimensional prefix sum passes.')
+    ON CONFLICT (module_id, title) DO UPDATE SET
+        content_type = EXCLUDED.content_type,
+        content_text = EXCLUDED.content_text;
+
+    -- Module 4: Module 4. Network Flow Algorithms...
+    INSERT INTO modules (course_id, title, order_index)
+    VALUES (v_course_id, 'Module 4. Network Flow Algorithms', 3)
+    ON CONFLICT (course_id, title) DO UPDATE SET
+        order_index = EXCLUDED.order_index
+    RETURNING id INTO v_module_id;
+    IF v_module_id IS NULL THEN
+        SELECT id INTO v_module_id FROM modules WHERE course_id = v_course_id AND title = 'Module 4. Network Flow Algorithms';
+    END IF;
+
+    INSERT INTO course_content (module_id, title, content_type, content_text)
+    VALUES (v_module_id, 'Module 4. Network Flow Algorithms', 'text', 'A flow network is a directed graph where each edge has a non-negative capacity c(u, v), with distinguished source s and sink t nodes. Feasible flows satisfy capacity constraints (0 <= f(u, v) <= c(u, v)) and flow conservation (total incoming flow equals total outgoing flow for all intermediate nodes). A residual network represents remaining capacity c_f(u, v) = c(u, v) - f(u, v) along direct edges and reverse flow along residual back-edges. An augmenting path is a simple directed path from s to t in the residual network with positive residual bottleneck capacity. The Max-Flow Min-Cut Theorem proves that the maximum flow through a network is strictly equal to the minimum capacity of an s-t cut partitioning vertices into sets S and T. The Ford-Fulkerson method augments flow along residual paths; the Edmonds-Karp algorithm specifies BFS shortest augmenting paths to guarantee an O(V * E^2) runtime. Dinic''s algorithm builds level graphs using BFS and pushes blocking flows via DFS, achieving O(V^2 * E) general bounds and O(E * sqrt(V)) on unit networks. Applications of network flow include Maximum Bipartite Matching via Hopcroft-Karp, edge-disjoint paths, project selection closures, and minimum path covers in DAGs.')
+    ON CONFLICT (module_id, title) DO UPDATE SET
+        content_type = EXCLUDED.content_type,
+        content_text = EXCLUDED.content_text;
+
+    -- Module 5: Module 5. NP-Completeness and Approximat...
+    INSERT INTO modules (course_id, title, order_index)
+    VALUES (v_course_id, 'Module 5. NP-Completeness and Approximation Algorithms', 4)
+    ON CONFLICT (course_id, title) DO UPDATE SET
+        order_index = EXCLUDED.order_index
+    RETURNING id INTO v_module_id;
+    IF v_module_id IS NULL THEN
+        SELECT id INTO v_module_id FROM modules WHERE course_id = v_course_id AND title = 'Module 5. NP-Completeness and Approximation Algorithms';
+    END IF;
+
+    INSERT INTO course_content (module_id, title, content_type, content_text)
+    VALUES (v_module_id, 'Module 5. NP-Completeness and Approximation Algorithms', 'text', 'Computational complexity categorizes problems: P contains decision problems solvable in deterministic polynomial time; NP contains problems verifiable in polynomial time given a certificate. A problem is NP-Hard if every problem in NP polynomial-time reduces to it; a problem is NP-Complete if it is both in NP and NP-Hard. The Cook-Levin theorem establishes the Boolean Satisfiability Problem (SAT) as the foundational NP-Complete problem. Polynomial-time Karp reductions (A <=_p B) transform instances of 3-SAT to Independent Set, Vertex Cover, Clique, Subset Sum, and Hamiltonian Cycle. Approximation algorithms provide polynomial-time solutions with mathematically provable bounds relative to optimal solutions for NP-Hard optimization problems. The Metric Travelling Salesperson Problem (satisfying triangle inequality) admits a 2-approximation via Minimum Spanning Trees (MST) and a 1.5-approximation via Christofides algorithm using minimum-weight perfect matching. Vertex Cover admits a simple 2-approximation using maximal edge matchings, while Greedy Set Cover achieves an O(ln n) logarithmic approximation factor. A Fully Polynomial-Time Approximation Scheme (FPTAS) for the 0/1 Knapsack problem guarantees a (1 - epsilon) approximation ratio in O(n^3 / epsilon) time by scaling and rounding profit values.')
+    ON CONFLICT (module_id, title) DO UPDATE SET
+        content_type = EXCLUDED.content_type,
+        content_text = EXCLUDED.content_text;
+
+    -- Module 6: Module 6. Randomised Algorithms...
+    INSERT INTO modules (course_id, title, order_index)
+    VALUES (v_course_id, 'Module 6. Randomised Algorithms', 5)
+    ON CONFLICT (course_id, title) DO UPDATE SET
+        order_index = EXCLUDED.order_index
+    RETURNING id INTO v_module_id;
+    IF v_module_id IS NULL THEN
+        SELECT id INTO v_module_id FROM modules WHERE course_id = v_course_id AND title = 'Module 6. Randomised Algorithms';
+    END IF;
+
+    INSERT INTO course_content (module_id, title, content_type, content_text)
+    VALUES (v_module_id, 'Module 6. Randomised Algorithms', 'text', 'Randomized algorithms utilize stochastic coin flips during execution, classified into Las Vegas algorithms (always correct output, randomized runtime) and Monte Carlo algorithms (deterministic runtime, bounded error probability). Randomized Quicksort selects pivots uniformly at random, achieving O(n log n) expected comparisons with high probability by avoiding worst-case O(n^2) partition splits. Universal hashing selects hash functions uniformly from a universal family H such that collision probability Pr[h(x) = h(y)] <= 1 / m for any distinct keys. FKS Perfect Hashing constructs two-level hash tables providing O(1) worst-case lookup time using O(n) total storage without collision chains. Bloom Filters represent space-efficient probabilistic set membership data structures using k independent hash functions and an m-bit array, with false positive probability p approximately (1 - exp(-kn/m))^k. The Miller-Rabin primality test determines whether an integer n is prime in O(k log^3 n) time by checking non-trivial square roots of unity modulo n, bounding composite misclassification to at most 4^(-k). Karger''s randomized min-cut algorithm repeatedly contracts random edges in multigraphs to isolate minimum cuts with success probability at least 2 / (n * (n - 1)).')
+    ON CONFLICT (module_id, title) DO UPDATE SET
+        content_type = EXCLUDED.content_type,
+        content_text = EXCLUDED.content_text;
+
+
+    -- Course: 25CS1302E - Database Systems Engineering and Distributed Backend Development
+    INSERT INTO courses (course_code, title, description, credits, coordinator, prerequisite, instructor_id)
+    VALUES ('25CS1302E', 'Database Systems Engineering and Distributed Backend Development', 'Enterprise database engineering and distributed backend architectures covering relational theory, advanced SQL, polyglot persistence (SQL, NoSQL, Vector), transaction processing, MVCC, distributed consensus, query optimization, high availability, and CQRS.', 4, 'Dr. V. S. Rao', 'None (Core Course)', 1)
+    ON CONFLICT (course_code) DO UPDATE SET
+        title = EXCLUDED.title,
+        description = EXCLUDED.description,
+        credits = EXCLUDED.credits,
+        coordinator = EXCLUDED.coordinator,
+        prerequisite = EXCLUDED.prerequisite
+    RETURNING id INTO v_course_id;
+    IF v_course_id IS NULL THEN
+        SELECT id INTO v_course_id FROM courses WHERE course_code = '25CS1302E';
+    END IF;
+
+    -- Module 1: CO1. Relational Database Engineering & A...
+    INSERT INTO modules (course_id, title, order_index)
+    VALUES (v_course_id, 'CO1. Relational Database Engineering & Advanced SQL', 0)
+    ON CONFLICT (course_id, title) DO UPDATE SET
+        order_index = EXCLUDED.order_index
+    RETURNING id INTO v_module_id;
+    IF v_module_id IS NULL THEN
+        SELECT id INTO v_module_id FROM modules WHERE course_id = v_course_id AND title = 'CO1. Relational Database Engineering & Advanced SQL';
+    END IF;
+
+    INSERT INTO course_content (module_id, title, content_type, content_text)
+    VALUES (v_module_id, 'CO1. Relational Database Engineering & Advanced SQL', 'text', 'The relational database model structures data into mathematical relations with schemas, tuples, and integrity constraints. Relational algebra defines procedural query operations: selection (sigma), projection (pi), Cartesian product (x), set union, set difference, and natural join (bowtie). Functional dependencies (X -> Y) formalize data redundancy and constraints, governed by Armstrong''s Axioms of reflexivity, augmentation, and transitivity. Database normalization eliminates insertion, deletion, and update anomalies: 1NF requires atomic values; 2NF eliminates partial dependencies on candidate keys; 3NF eliminates transitive dependencies. Boyce-Codd Normal Form (BCNF) strictly requires that for every non-trivial functional dependency X -> Y, X must be a superkey. Lossless-join decomposition preserves all original relational information, while dependency preservation guarantees all functional dependencies can be checked within decomposed individual relations. Advanced procedural SQL objects in PostgreSQL include stored procedures with explicit transaction control (COMMIT/ROLLBACK), triggers executed before or after table mutations, and materialized views with refresh strategies.')
+    ON CONFLICT (module_id, title) DO UPDATE SET
+        content_type = EXCLUDED.content_type,
+        content_text = EXCLUDED.content_text;
+
+    -- Module 2: CO2. Database Engineering (SQL + NoSQL +...
+    INSERT INTO modules (course_id, title, order_index)
+    VALUES (v_course_id, 'CO2. Database Engineering (SQL + NoSQL + Vector)', 1)
+    ON CONFLICT (course_id, title) DO UPDATE SET
+        order_index = EXCLUDED.order_index
+    RETURNING id INTO v_module_id;
+    IF v_module_id IS NULL THEN
+        SELECT id INTO v_module_id FROM modules WHERE course_id = v_course_id AND title = 'CO2. Database Engineering (SQL + NoSQL + Vector)';
+    END IF;
+
+    INSERT INTO course_content (module_id, title, content_type, content_text)
+    VALUES (v_module_id, 'CO2. Database Engineering (SQL + NoSQL + Vector)', 'text', 'Modern polyglot data architectures match specialized storage engines to workload requirements across relational, document, key-value, and vector models. Relational databases enforce strict ACID semantics and normalized schemas, whereas document databases like MongoDB offer flexible BSON schemas for rapid iteration and hierarchical data modeling. MongoDB features include document CRUD operations, the Aggregation Pipeline ($match, $project, $group, $unwind, $lookup), secondary indexes, and distributed sharding. Polyglot persistence integrates relational SQL systems for transactional business logic with NoSQL engines for high-volume unstructured reads and document storage. Vector databases store high-dimensional embeddings generated by AI and deep learning models to perform semantic similarity search. Similarity metrics include Cosine Similarity, Euclidean (L2) distance, and Inner Product (Dot Product). Approximate Nearest Neighbor (ANN) indexing structures such as HNSW (Hierarchical Navigable Small World graphs) and IVF (Inverted File Index) enable sub-linear vector retrieval. The PostgreSQL pgvector extension adds native VECTOR columns, IVFFlat and HNSW indexes, and distance operators (<=> for cosine, <-> for L2) for Retrieval-Augmented Generation (RAG) pipelines.')
+    ON CONFLICT (module_id, title) DO UPDATE SET
+        content_type = EXCLUDED.content_type,
+        content_text = EXCLUDED.content_text;
+
+    -- Module 3: CO3. Distributed Transactions and Consis...
+    INSERT INTO modules (course_id, title, order_index)
+    VALUES (v_course_id, 'CO3. Distributed Transactions and Consistency Models', 2)
+    ON CONFLICT (course_id, title) DO UPDATE SET
+        order_index = EXCLUDED.order_index
+    RETURNING id INTO v_module_id;
+    IF v_module_id IS NULL THEN
+        SELECT id INTO v_module_id FROM modules WHERE course_id = v_course_id AND title = 'CO3. Distributed Transactions and Consistency Models';
+    END IF;
+
+    INSERT INTO course_content (module_id, title, content_type, content_text)
+    VALUES (v_module_id, 'CO3. Distributed Transactions and Consistency Models', 'text', 'Transaction processing guarantees the ACID properties: Atomicity (all-or-nothing), Consistency (integrity preservation), Isolation (concurrency control), and Durability (WAL persistence). Write-Ahead Logging (WAL) ensures durability and atomicity by recording all modifications to disk before applying dirty pages to the database buffer pool, governed by the ARIES recovery protocol. Concurrency control anomalies include Dirty Reads (reading uncommitted updates), Non-repeatable Reads (modified values between reads), Phantom Reads (new rows inserted matching search predicates), and Serialization Anomalies. Two-Phase Locking (2PL) enforces serializability through expanding growing phases and contracting shrinking phases; Strict 2PL holds exclusive locks until commit to prevent cascading aborts. Multi-Version Concurrency Control (MVCC) creates immutable row snapshots with transaction timestamps, ensuring readers never block writers and writers never block readers. The CAP theorem states that a distributed data store can guarantee at most two out of Consistency, Availability, and Partition Tolerance simultaneously. The PACELC theorem extends CAP: if there is a Partition (P), trade off Availability (A) versus Consistency (C); Else (E), trade off Latency (L) versus Consistency (C). Distributed transactions use the Two-Phase Commit (2PC) protocol with Prepare and Commit phases, and consensus algorithms like Raft and Paxos to maintain distributed state.')
+    ON CONFLICT (module_id, title) DO UPDATE SET
+        content_type = EXCLUDED.content_type,
+        content_text = EXCLUDED.content_text;
+
+    -- Module 4: CO4. Query Processing and Optimization...
+    INSERT INTO modules (course_id, title, order_index)
+    VALUES (v_course_id, 'CO4. Query Processing and Optimization', 3)
+    ON CONFLICT (course_id, title) DO UPDATE SET
+        order_index = EXCLUDED.order_index
+    RETURNING id INTO v_module_id;
+    IF v_module_id IS NULL THEN
+        SELECT id INTO v_module_id FROM modules WHERE course_id = v_course_id AND title = 'CO4. Query Processing and Optimization';
+    END IF;
+
+    INSERT INTO course_content (module_id, title, content_type, content_text)
+    VALUES (v_module_id, 'CO4. Query Processing and Optimization', 'text', 'The query processing engine transforms declarative SQL statements into efficient executable physical query execution plans. The query lifecycle involves parsing, semantic validation, algebraic rewriting (predicate pushdown, projection elimination, join reordering), cost estimation, and plan execution. Physical join algorithms include Nested Loop Join (ideal for small inputs with index lookups), Block Nested Loop, Hash Join (building an in-memory hash table on the smaller relation and probing with the larger), and Merge Join (for pre-sorted inputs). Cost-based query optimizers estimate I/O and CPU costs using catalog statistics, single-column histograms, correlation coefficients, and value distinct counts. B-Tree and B+ Tree indexes maintain balanced multi-way tree structures with high fan-out, storing sorted key-pointer pairs in leaf nodes with bidirectional linked lists for range scans. Hash indexes support O(1) equality lookups but cannot evaluate range queries or sorting; Generalized Inverted Indexes (GIN) index composite elements like full-text lexemes and JSON arrays. PostgreSQL query execution analysis uses EXPLAIN and EXPLAIN (ANALYZE, BUFFERS) to inspect actual query runtime, sequential scans, index scans, and buffer cache hit rates.')
+    ON CONFLICT (module_id, title) DO UPDATE SET
+        content_type = EXCLUDED.content_type,
+        content_text = EXCLUDED.content_text;
+
+    -- Module 5: CO5. Polyglot Architecture and High Avai...
+    INSERT INTO modules (course_id, title, order_index)
+    VALUES (v_course_id, 'CO5. Polyglot Architecture and High Availability', 4)
+    ON CONFLICT (course_id, title) DO UPDATE SET
+        order_index = EXCLUDED.order_index
+    RETURNING id INTO v_module_id;
+    IF v_module_id IS NULL THEN
+        SELECT id INTO v_module_id FROM modules WHERE course_id = v_course_id AND title = 'CO5. Polyglot Architecture and High Availability';
+    END IF;
+
+    INSERT INTO course_content (module_id, title, content_type, content_text)
+    VALUES (v_module_id, 'CO5. Polyglot Architecture and High Availability', 'text', 'High availability architectures eliminate single points of failure through redundancy, automated failover, and data replication. Replication topologies include primary-replica architectures with asynchronous replication for low write latency or synchronous replication for zero data loss (RPO = 0). Horizontal partitioning (sharding) splits large tables across independent physical database instances using hash sharding, range sharding, or consistent hashing to avoid hot spots. Consistent hashing distributes keys across a logical ring with virtual nodes, minimizing key migration when database nodes are added or removed. Caching strategies accelerate read workloads: Cache-Aside (lazy loading), Write-Through, and Write-Behind (Write-Back) caching with Redis or Memcached. Cache invalidation challenges include the thundering herd problem, dogpile effect, and cache stampede, mitigated through probabilistic early expiration and mutex locks. Database connection pooling (such as PgBouncer or HikariCP) manages persistent backend connections, amortizing process creation overhead and bounding database server memory usage.')
+    ON CONFLICT (module_id, title) DO UPDATE SET
+        content_type = EXCLUDED.content_type,
+        content_text = EXCLUDED.content_text;
+
+    -- Module 6: CO6. System Engineering Project Integrat...
+    INSERT INTO modules (course_id, title, order_index)
+    VALUES (v_course_id, 'CO6. System Engineering Project Integration', 5)
+    ON CONFLICT (course_id, title) DO UPDATE SET
+        order_index = EXCLUDED.order_index
+    RETURNING id INTO v_module_id;
+    IF v_module_id IS NULL THEN
+        SELECT id INTO v_module_id FROM modules WHERE course_id = v_course_id AND title = 'CO6. System Engineering Project Integration';
+    END IF;
+
+    INSERT INTO course_content (module_id, title, content_type, content_text)
+    VALUES (v_module_id, 'CO6. System Engineering Project Integration', 'text', 'Enterprise system design integrates polyglot databases into robust, event-driven, distributed backend architectures. Event-driven architectures utilize distributed streaming platforms like Apache Kafka and RabbitMQ to decouple services and broadcast data change events. Change Data Capture (CDC) with tools like Debezium captures row-level inserts, updates, and deletes directly from database Write-Ahead Logs without modifying application code. Command Query Responsibility Segregation (CQRS) separates command models that write to transactional relational stores from query models that read from denormalized document or vector search engines. Distributed transactions across microservices implement the Saga pattern, coordinating multi-step business transactions through either choreographic event publishing or orchestrator workflows with compensating actions. Backend web services follow layered domain-driven design: API Routers handle HTTP routing, Services encapsulate business logic, and Repositories isolate database queries.')
+    ON CONFLICT (module_id, title) DO UPDATE SET
+        content_type = EXCLUDED.content_type,
+        content_text = EXCLUDED.content_text;
+
+
+    -- Course: 25CS2104E - Operating Systems and Systems Programming
+    INSERT INTO courses (course_code, title, description, credits, coordinator, prerequisite, instructor_id)
+    VALUES ('25CS2104E', 'Operating Systems and Systems Programming', 'Operating system abstractions and low-level systems programming in C on Linux. Covers CPU privilege modes, system calls, process lifecycles, POSIX threads, synchronization primitives, deadlock algorithms, virtual memory, demand paging, file systems, VFS, and multiplexed I/O.', 4, 'Dr. K. Venkat', '25CS1101E - Computer Organization and Architecture', 1)
+    ON CONFLICT (course_code) DO UPDATE SET
+        title = EXCLUDED.title,
+        description = EXCLUDED.description,
+        credits = EXCLUDED.credits,
+        coordinator = EXCLUDED.coordinator,
+        prerequisite = EXCLUDED.prerequisite
+    RETURNING id INTO v_course_id;
+    IF v_course_id IS NULL THEN
+        SELECT id INTO v_course_id FROM courses WHERE course_code = '25CS2104E';
+    END IF;
+
+    -- Module 1: CO-1. System Architecture and the Operat...
+    INSERT INTO modules (course_id, title, order_index)
+    VALUES (v_course_id, 'CO-1. System Architecture and the Operating System', 0)
+    ON CONFLICT (course_id, title) DO UPDATE SET
+        order_index = EXCLUDED.order_index
+    RETURNING id INTO v_module_id;
+    IF v_module_id IS NULL THEN
+        SELECT id INTO v_module_id FROM modules WHERE course_id = v_course_id AND title = 'CO-1. System Architecture and the Operating System';
+    END IF;
+
+    INSERT INTO course_content (module_id, title, content_type, content_text)
+    VALUES (v_module_id, 'CO-1. System Architecture and the Operating System', 'text', 'The operating system serves as an intermediary abstraction layer between user applications and bare computer hardware. Hardware enforcement of security boundaries utilizes dual-mode CPU operation: User Mode (restricted CPU instruction set, Ring 3) and Kernel Mode (unrestricted hardware access, Ring 0). Mode transitions occur via three primary control mechanisms: hardware interrupts from peripherals, software exceptions caused by program errors (division by zero, page faults), and system calls. The Interrupt Descriptor Table (IDT) maps interrupt vectors to specific kernel Interrupt Service Routines (ISRs) stored in protected kernel memory. System call execution begins when user code issues a software trap or specialized CPU instruction (such as ''syscall'' on x86-64). The CPU hardware saves user execution state (program counter, stack pointer, flags), elevates execution privilege to Ring 0, and switches to the per-process kernel stack. The kernel dispatcher validates arguments passed in designated CPU registers (%rdi, %rsi, %rdx, %r10, %r8, %r9) and invokes the appropriate handler from the system call dispatch table (sys_call_table).')
+    ON CONFLICT (module_id, title) DO UPDATE SET
+        content_type = EXCLUDED.content_type,
+        content_text = EXCLUDED.content_text;
+
+    -- Module 2: CO-2. Process and Thread Architecture...
+    INSERT INTO modules (course_id, title, order_index)
+    VALUES (v_course_id, 'CO-2. Process and Thread Architecture', 1)
+    ON CONFLICT (course_id, title) DO UPDATE SET
+        order_index = EXCLUDED.order_index
+    RETURNING id INTO v_module_id;
+    IF v_module_id IS NULL THEN
+        SELECT id INTO v_module_id FROM modules WHERE course_id = v_course_id AND title = 'CO-2. Process and Thread Architecture';
+    END IF;
+
+    INSERT INTO course_content (module_id, title, content_type, content_text)
+    VALUES (v_module_id, 'CO-2. Process and Thread Architecture', 'text', 'A process is an active instance of a running program, represented internally by the kernel Process Control Block (PCB) or ''struct task_struct'' in Linux. The PCB maintains essential metadata: Process ID (PID), process execution state (Ready, Running, Blocked, Zombie, Terminated), CPU registers, memory maps, open file descriptors, and scheduling priority. Process memory layout divides virtual address space into text (compiled binary code), initialized data, BSS (uninitialized static data), the heap growing upward, and the call stack growing downward. Process creation via fork() duplicates the calling process, utilizing Copy-on-Write (COW) memory page mapping to avoid physical memory copies until a write occurs. The execve() system call replaces the existing process memory space with a freshly parsed ELF executable binary. Terminated processes remain in a Zombie state until their parent reaps exit status codes via wait() or waitpid(); unreaped children of terminated parents become orphan processes re-parented to systemd or init. Threads share address space, code, and file descriptors with their parent process but maintain private program counters, registers, and stacks. CPU scheduling algorithms schedule thread execution based on fairness and latency goals: First-Come First-Served (FCFS), Shortest Remaining Time First (SRTF), Priority Scheduling, and the Linux Completely Fair Scheduler (CFS) using red-black trees based on virtual runtime (vruntime).')
+    ON CONFLICT (module_id, title) DO UPDATE SET
+        content_type = EXCLUDED.content_type,
+        content_text = EXCLUDED.content_text;
+
+    -- Module 3: CO-3. Concurrency and Synchronization...
+    INSERT INTO modules (course_id, title, order_index)
+    VALUES (v_course_id, 'CO-3. Concurrency and Synchronization', 2)
+    ON CONFLICT (course_id, title) DO UPDATE SET
+        order_index = EXCLUDED.order_index
+    RETURNING id INTO v_module_id;
+    IF v_module_id IS NULL THEN
+        SELECT id INTO v_module_id FROM modules WHERE course_id = v_course_id AND title = 'CO-3. Concurrency and Synchronization';
+    END IF;
+
+    INSERT INTO course_content (module_id, title, content_type, content_text)
+    VALUES (v_module_id, 'CO-3. Concurrency and Synchronization', 'text', 'A critical section is a sequence of code accessing shared mutable state where concurrent execution by multiple threads can cause non-deterministic race conditions. Mutual exclusion algorithms satisfy three fundamental correctness requirements: mutual exclusion (only one thread in critical section), progress (unblocked threads proceed), and bounded waiting (no thread starves indefinitely). Hardware synchronization primitives provide atomic read-modify-write memory operations such as Test-and-Set and Compare-and-Swap (CAS). Spinlocks repeatedly poll an atomic flag via busy waiting, efficient only for brief critical sections on multi-core systems where context switch overhead exceeds wait latency. Mutex locks provide sleeping mutual exclusion with ownership semantics, allowing only the lock-acquiring thread to release it. Counting semaphores maintain integer values accessed strictly through atomic wait (P/decrement) and signal (V/increment) primitives without ownership constraints. Condition variables enable threads to block until a specific state condition is met, utilizing pthread_cond_wait, pthread_cond_signal, and pthread_cond_broadcast within predicate loops to prevent spurious wakeups. Deadlocks arise when processes are permanently blocked waiting for resources held by each other, requiring all four Coffman conditions: Mutual Exclusion, Hold and Wait, No Preemption, and Circular Wait. Deadlock algorithms include prevention (ordering resource acquisition), avoidance using Dijkstra''s Banker''s Algorithm with safe state analysis, and detection using Resource Allocation Graphs (RAG).')
+    ON CONFLICT (module_id, title) DO UPDATE SET
+        content_type = EXCLUDED.content_type,
+        content_text = EXCLUDED.content_text;
+
+    -- Module 4: CO-4. Memory Management and Virtual Memo...
+    INSERT INTO modules (course_id, title, order_index)
+    VALUES (v_course_id, 'CO-4. Memory Management and Virtual Memory', 3)
+    ON CONFLICT (course_id, title) DO UPDATE SET
+        order_index = EXCLUDED.order_index
+    RETURNING id INTO v_module_id;
+    IF v_module_id IS NULL THEN
+        SELECT id INTO v_module_id FROM modules WHERE course_id = v_course_id AND title = 'CO-4. Memory Management and Virtual Memory';
+    END IF;
+
+    INSERT INTO course_content (module_id, title, content_type, content_text)
+    VALUES (v_module_id, 'CO-4. Memory Management and Virtual Memory', 'text', 'Virtual memory provides applications with the illusion of vast, contiguous, private address spaces while abstracting and protecting underlying physical DRAM. The Memory Management Unit (MMU) hardware translates virtual memory addresses into physical memory addresses using page tables. Virtual memory is divided into fixed-size units called pages (typically 4 KB), which map onto physical memory page frames. Page Table Entries (PTE) store the physical frame number along with hardware status flags: Present/Valid bit, Read/Write permission bit, User/Supervisor bit, Dirty bit, and Accessed bit. Multi-level page tables structure page directories hierarchically, enabling sparse virtual memory representation without allocating physical memory for unused address regions. The Translation Lookaside Buffer (TLB) acts as a high-speed hardware associative cache for page translations, reducing memory lookup latency. Demand paging loads pages into physical memory only upon access. A page fault occurs when a program accesses a virtual page whose PTE Present bit is zero: 1. The MMU raises an architectural page fault exception (Interrupt Vector 14). 2. The CPU saves user register state and switches execution into the kernel page fault handler. 3. The OS inspects the faulting address: if invalid, the process receives SIGSEGV; if valid, the OS selects a free physical frame. 4. If no free frame exists, a page replacement algorithm (LRU, Second-Chance Clock, Optimal) evicts a victim page, writing it to swap storage if dirty. 5. The OS initiates non-blocking disk I/O to read the requested page into the allocated physical frame. 6. Once disk I/O completes, the OS updates the PTE with the physical frame number, marks the Present bit as valid, and marks the process state as Ready. 7. The CPU scheduler reschedules the process, and the CPU restarts the exact instruction that previously faulted.')
+    ON CONFLICT (module_id, title) DO UPDATE SET
+        content_type = EXCLUDED.content_type,
+        content_text = EXCLUDED.content_text;
+
+    -- Module 5: CO-5. Storage and File Systems...
+    INSERT INTO modules (course_id, title, order_index)
+    VALUES (v_course_id, 'CO-5. Storage and File Systems', 4)
+    ON CONFLICT (course_id, title) DO UPDATE SET
+        order_index = EXCLUDED.order_index
+    RETURNING id INTO v_module_id;
+    IF v_module_id IS NULL THEN
+        SELECT id INTO v_module_id FROM modules WHERE course_id = v_course_id AND title = 'CO-5. Storage and File Systems';
+    END IF;
+
+    INSERT INTO course_content (module_id, title, content_type, content_text)
+    VALUES (v_module_id, 'CO-5. Storage and File Systems', 'text', 'File systems organize unstructured storage blocks on persistent secondary media into structured hierarchical files and directories. Hard Disk Drives (HDD) organize data on spinning platters, where I/O latency is dominated by mechanical seek time and rotational latency. Solid State Drives (SSD) use flash memory cells organized into pages and blocks, where writes require prior block erasure, managed by the Flash Translation Layer (FTL) using wear leveling. The Linux Virtual File System (VFS) abstracts concrete file systems through a common object-oriented kernel interface comprising Superblocks, Inodes, Dentries, and Files. An inode (index node) stores file metadata including size, permissions, owner UID, timestamps, and data block pointers, but never stores the filename. Dentries (directory entries) map human-readable path string names to specific inode numbers, cached in the kernel dentry cache (dcache) for rapid path resolution. Hard links create multiple dentry aliases pointing to the identical inode number; soft links (symbolic links) store path string references to target files in distinct inodes. The Ext4 file system organizes storage into Block Groups with inode tables, extent trees for contiguous block allocation, and write-ahead journaling modes (data=ordered, data=journal) for crash recovery.')
+    ON CONFLICT (module_id, title) DO UPDATE SET
+        content_type = EXCLUDED.content_type,
+        content_text = EXCLUDED.content_text;
+
+    -- Module 6: CO-6. Kernel Internals and Systems Progr...
+    INSERT INTO modules (course_id, title, order_index)
+    VALUES (v_course_id, 'CO-6. Kernel Internals and Systems Programming', 5)
+    ON CONFLICT (course_id, title) DO UPDATE SET
+        order_index = EXCLUDED.order_index
+    RETURNING id INTO v_module_id;
+    IF v_module_id IS NULL THEN
+        SELECT id INTO v_module_id FROM modules WHERE course_id = v_course_id AND title = 'CO-6. Kernel Internals and Systems Programming';
+    END IF;
+
+    INSERT INTO course_content (module_id, title, content_type, content_text)
+    VALUES (v_module_id, 'CO-6. Kernel Internals and Systems Programming', 'text', 'Systems programming in C on Linux utilizes low-level POSIX primitives that interact directly with the kernel boundary. File I/O operations utilize integer file descriptors indexing the process open file table: standard input (0), standard output (1), and standard error (2). The open(), read(), write(), close(), and lseek() system calls perform unbuffered byte-level input and output. File descriptor duplication via dup() and dup2() enables standard I/O redirection and piping between process pipelines. Inter-Process Communication (IPC) mechanisms include anonymous pipes for related processes, Named Pipes (FIFOs) across the file system, UNIX Domain Sockets for local IPC, and POSIX Shared Memory (shm_open, mmap) for zero-copy memory exchange. Signals provide asynchronous notifications of hardware and software events (SIGINT, SIGTERM, SIGKILL, SIGSEGV, SIGCHLD), handled via the sigaction() interface using reentrant async-signal-safe functions. I/O multiplexing enables single-threaded event loops to monitor thousands of concurrent connections efficiently: while legacy select() and poll() scale with O(n) scan overhead, Linux epoll (epoll_create, epoll_ctl, epoll_wait) provides O(1) event readiness notification using kernel wait queues, supporting Edge-Triggered (ET) and Level-Triggered (LT) modes.')
+    ON CONFLICT (module_id, title) DO UPDATE SET
+        content_type = EXCLUDED.content_type,
+        content_text = EXCLUDED.content_text;
+
+END $$;
+
+-- Verification queries
+SELECT course_code, title, credits, coordinator FROM courses ORDER BY id;
+SELECT COUNT(*) AS total_courses FROM courses;
+SELECT COUNT(*) AS total_modules FROM modules;
+SELECT COUNT(*) AS total_course_content FROM course_content;

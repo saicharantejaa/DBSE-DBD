@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DBSE Project — Complete Cloud & Container Deployment Guide</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com">
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700;800&family=JetBrains+Mono:wght@400;600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0a0e17;
+      --surface: #121826;
+      --card: #182236;
+      --border: rgba(255, 255, 255, 0.08);
+      --accent: #38bdf8;
+      --accent-green: #34d399;
+      --accent-purple: #a78bfa;
+      --text: #f1f5f9;
+      --text-muted: #94a3b8;
+    }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Inter', sans-serif;
+      line-height: 1.6;
+      padding: 40px 20px;
+    }
+    .container {
+      max-width: 960px;
+      margin: 0 auto;
+    }
+    .badge {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.75rem;
+      background: rgba(56, 189, 248, 0.15);
+      color: var(--accent);
+      padding: 4px 12px;
+      border-radius: 9999px;
+      border: 1px solid rgba(56, 189, 248, 0.3);
+      display: inline-block;
+      margin-bottom: 12px;
+    }
+    h1 {
+      font-family: 'Outfit', sans-serif;
+      font-size: 2.4rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      margin-bottom: 12px;
+    }
+    p.lead {
+      color: var(--text-muted);
+      font-size: 1.1rem;
+      margin-bottom: 36px;
+    }
+    .method-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 28px;
+      margin-bottom: 30px;
+    }
+    .method-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 14px;
+    }
+    .method-title {
+      font-family: 'Outfit', sans-serif;
+      font-size: 1.4rem;
+      font-weight: 700;
+      color: #fff;
+    }
+    .tag {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.75rem;
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-weight: 600;
+    }
+    .tag-free { background: rgba(52, 211, 153, 0.15); color: var(--accent-green); }
+    .tag-docker { background: rgba(167, 139, 250, 0.15); color: var(--accent-purple); }
+
+    .step-box {
+      margin-top: 18px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 18px;
+    }
+    .step-title {
+      font-weight: 600;
+      font-size: 1rem;
+      color: var(--accent);
+      margin-bottom: 6px;
+    }
+    pre {
+      background: #090c14;
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      border-radius: 8px;
+      padding: 12px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.85rem;
+      color: #e2e8f0;
+      overflow-x: auto;
+      margin-top: 8px;
+    }
+    code { font-family: 'JetBrains Mono', monospace; color: var(--accent); }
+    ol, ul { padding-left: 20px; color: var(--text-muted); font-size: 0.92rem; }
+    li { margin-bottom: 8px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <span class="badge">Isolated Deployment Package</span>
+    <h1>How to Deploy Your DBSE Project (Step-by-Step)</h1>
+    <p class="lead">
+      All deployment configurations have been created in the isolated <code>deployment/</code> directory. 
+      Your original project files in <code>backend/</code>, <code>mock-api/</code>, and <code>frontend/</code> are 100% untouched and safe.
+    </p>
+
+    <!-- METHOD 1: 5-MINUTE FREE CLOUD DEPLOY -->
+    <div class="method-card">
+      <div class="method-header">
+        <div class="method-title">Method 1: Free 5-Minute Cloud Deploy (Vercel + Render)</div>
+        <span class="tag tag-free">Recommended for University Demos</span>
+      </div>
+      <p style="color: var(--text-muted); font-size: 0.95rem;">
+        This gives you a real live public HTTPS URL (e.g., <code>https://dbse-project.vercel.app</code>) that you and your professors can open on any phone, laptop, or projector.
+      </p>
+
+      <div class="step-box">
+        <div class="step-title">Step 1: Deploy Backend to Render (Free)</div>
+        <ol>
+          <li>Push your project repository to GitHub.</li>
+          <li>Log in to <a href="https://render.com" target="_blank" style="color: var(--accent);">Render.com</a> (free).</li>
+          <li>Click <strong>New +</strong> &rarr; <strong>Web Service</strong> &rarr; Connect your GitHub repository.</li>
+          <li>Fill in these 4 settings:
+            <ul>
+              <li><strong>Root Directory:</strong> <code>mock-api</code></li>
+              <li><strong>Build Command:</strong> <code>npm install</code></li>
+              <li><strong>Start Command:</strong> <code>node index.js</code></li>
+              <li><strong>Instance Type:</strong> <code>Free</code></li>
+            </ul>
+          </li>
+          <li>Click <strong>Deploy Web Service</strong>. In ~2 minutes, Render gives you a live backend URL like:<br>
+            <code>https://dbse-backend.onrender.com</code>
+          </li>
+        </ol>
+      </div>
+
+      <div class="step-box">
+        <div class="step-title">Step 2: Deploy Frontend to Vercel (Free)</div>
+        <ol>
+          <li>Log in to <a href="https://vercel.com" target="_blank" style="color: var(--accent);">Vercel.com</a> with GitHub.</li>
+          <li>Click <strong>Add New...</strong> &rarr; <strong>Project</strong> &rarr; Select your DBSE project repository.</li>
+          <li>Under <strong>Root Directory</strong>, click Edit and select: <code>frontend</code>.</li>
+          <li>Under <strong>Environment Variables</strong>, add:
+            <ul>
+              <li>Name: <code>VITE_API_URL</code></li>
+              <li>Value: <code>https://your-render-backend-url.onrender.com</code></li>
+            </ul>
+          </li>
+          <li>Click <strong>Deploy</strong>. Vercel automatically builds and provides your live public app link!</li>
+        </ol>
+      </div>
+    </div>
+
+    <!-- METHOD 2: CONTAINERIZED DOCKER DEPLOY -->
+    <div class="method-card">
+      <div class="method-header">
+        <div class="method-title">Method 2: One-Command Container Deploy (Docker Compose)</div>
+        <span class="tag tag-docker">CO6 Enterprise Evaluation</span>
+      </div>
+      <p style="color: var(--text-muted); font-size: 0.95rem;">
+        Spins up the complete multi-container stack: PostgreSQL 16 (with <code>pgvector</code> extension pre-compiled), Academic Backend API, and Nginx-powered React Frontend.
+      </p>
+
+      <div class="step-box">
+        <div class="step-title">Run with Docker on Any Machine / Cloud VM:</div>
+        <pre># From the project root folder:
+cd deployment
+docker compose up --build</pre>
+        <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 10px;">
+          Once started:
+        </p>
+        <ul>
+          <li><strong>Client Frontend:</strong> <code>http://localhost</code> (Port 80)</li>
+          <li><strong>Backend API:</strong> <code>http://localhost:3001</code></li>
+          <li><strong>PostgreSQL + pgvector:</strong> <code>localhost:5432</code></li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- SUMMARY OF FILES CREATED -->
+    <div class="method-card">
+      <div class="method-title" style="margin-bottom: 12px;">Files Created in <code>deployment/</code></div>
+      <ul>
+        <li><code>deployment/render.yaml</code> &mdash; Blueprint configuration for 1-click Render backend deployment.</li>
+        <li><code>deployment/vercel.json</code> &mdash; Vercel SPA routing and Vite rewrite configuration.</li>
+        <li><code>deployment/Dockerfile.frontend</code> &mdash; Multi-stage Nginx container for the React client.</li>
+        <li><code>deployment/Dockerfile.backend</code> &mdash; Node.js container for the Academic Knowledge service.</li>
+        <li><code>deployment/docker-compose.yml</code> &mdash; Multi-service composition (Postgres with pgvector + Backend + Frontend).</li>
+        <li><code>deployment/DEPLOYMENT_GUIDE.html</code> &mdash; This interactive guide.</li>
+      </ul>
+    </div>
+  </div>
+</body>
+</html>

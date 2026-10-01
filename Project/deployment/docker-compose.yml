@@ -1,0 +1,61 @@
+version: '3.8'
+
+services:
+  # 1. PostgreSQL Database with pgvector extension enabled
+  postgres:
+    image: pgvector/pgvector:pg16
+    container_name: dbse_postgres
+    restart: always
+    environment:
+      POSTGRES_USER: dbse_user
+      POSTGRES_PASSWORD: dbse_password
+      POSTGRES_DB: dbse_academic_ledger
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ../db/schema.sql:/docker-entrypoint-initdb.d/01_schema.sql
+      - ../db/load_real_courses.sql:/docker-entrypoint-initdb.d/02_load_courses.sql
+    networks:
+      - dbse_net
+
+  # 2. Academic API & Knowledge Engine Backend
+  backend:
+    build:
+      context: ..
+      dockerfile: deployment/Dockerfile.backend
+    container_name: dbse_backend
+    restart: always
+    ports:
+      - "3001:3001"
+    environment:
+      - PORT=3001
+      - NODE_ENV=production
+      - DATABASE_URL=postgresql://dbse_user:dbse_password@postgres:5432/dbse_academic_ledger
+    depends_on:
+      - postgres
+    networks:
+      - dbse_net
+
+  # 3. Client Frontend (React / Vite on Nginx)
+  frontend:
+    build:
+      context: ..
+      dockerfile: deployment/Dockerfile.frontend
+      args:
+        - VITE_API_URL=http://localhost:3001
+    container_name: dbse_frontend
+    restart: always
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+    networks:
+      - dbse_net
+
+networks:
+  dbse_net:
+    driver: bridge
+
+volumes:
+  pgdata:

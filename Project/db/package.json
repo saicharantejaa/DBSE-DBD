@@ -1,0 +1,13 @@
+{
+  "name": "learning-platform-db",
+  "version": "1.0.0",
+  "description": "Database schemas and seed scripts for Learning Platform",
+  "scripts": {
+    "seed:pg": "psql -f schema.sql && psql -f seed.sql",
+    "seed:mongo": "node seed-mongo.js",
+    "validate": "node -e \"require('./mongo-schemas.js'); console.log('Mongoose schemas OK');\""
+  },
+  "dependencies": {
+    "mongoose": "^8.5.2"
+  }
+}

@@ -1,0 +1,17 @@
+services:
+  # -----------------------------------------------------------
+  # BACKEND SERVICE (Free Tier Web Service on Render)
+  # -----------------------------------------------------------
+  - type: web
+    name: dbse-academic-backend
+    env: node
+    plan: free
+    rootDir: mock-api
+    buildCommand: npm install
+    startCommand: node index.js
+    envVars:
+      - key: PORT
+        value: 3001
+      - key: NODE_ENV
+        value: production
+    healthCheckPath: /courses

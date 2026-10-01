@@ -1,0 +1,16 @@
+# -----------------------------------------------------------------------------
+# Backend Dockerfile (Node.js High-Performance Microservice & Knowledge Engine)
+# -----------------------------------------------------------------------------
+FROM node:20-alpine
+
+WORKDIR /app
+COPY mock-api/package*.json ./
+RUN npm ci --only=production
+
+COPY mock-api/ ./
+
+EXPOSE 3001
+ENV PORT=3001
+ENV NODE_ENV=production
+
+CMD ["node", "index.js"]
